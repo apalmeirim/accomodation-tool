@@ -1,73 +1,54 @@
-import sqlite3
-from typing import Optional
+from .auth import get_supabase_client
 
-DB_FILE = "accomodation.db"
+# Shared Supabase client
+supabase = get_supabase_client()
 
-def get_connection():
-    return sqlite3.connect(DB_FILE, check_same_thread=False)
 
-def create_tables():
-    conn = get_connection()
-    c = conn.cursor()
 
-    c.execute("""
-              CREATE TABLE IF NOT EXISTS cities (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              name TEXT UNIQUE
-              )"""
-            )
-    
+def insert_attraction(user_id, name, lat, lon):
+    """Insert a new tourist attraction for the current user."""
+    return supabase.table("attractions").insert({
+        "user_id": user_id,
+        "name": name,
+        "lat": lat,
+        "lon": lon
+    }).execute()
 
-    c.execute("""
-              CREATE TABLE IF NOT EXISTS attractions (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              name TEXT, 
-              lat REAL,
-              lon REAL,
-              city_id INTEGER,
-              FOREIGN KEY(city_id) REFERENCES cities(id))"""
-            )
-    
 
-    c.execute("""
-              CREATE TABLE IF NOT EXISTS accomodations (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              name TEXT,
-              lat REAL,
-              lon REAL,
-              price REAL,
-              city_id INTEGER,
-              FOREIGN KEY(city_id) REFERENCES cities(id))"""
-            )
-    
-    conn.commit()
-    conn.close()
+def get_user_attractions(user_id):
+    """Retrieve all tourist attractions for the current user."""
+    result = supabase.table("attractions").select("*").eq("user_id", user_id).execute()
+    return result.data
 
-def insert_city(name:str) -> int:
-    conn = get_connection()
-    cursor = conn.cursor()
 
-    # Insert or ignore duplicate
-    cursor.execute("INSERT OR IGNORE INTO cities (name) VALUES (?)", (name,))
-    conn.commit()
+def delete_attraction(attraction_id, user_id):
+    """Delete a specific attraction owned by the user."""
+    return supabase.table("attractions").delete().eq("id", attraction_id).eq("user_id", user_id).execute()
 
-    # Always fetch ID (new or existing)
-    cursor.execute("SELECT id FROM cities WHERE name = ?", (name,))
-    row = cursor.fetchone()
-    conn.close()
 
-    return row[0] if row else None
-    
-def insert_accomodation(name:str, lat:float, lon:float, price:float, city_id:int):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("""INSERT INTO accomodations (name, lat, lon, price, city_id) VALUES (?, ?, ?, ?, ?)""", (name, lat, lon, price, city_id))
-    conn.commit()
-    conn.close()
+def insert_accommodation(user_id, name, lat, lon, price):
+    """Insert a new accommodation for the current user."""
+    return supabase.table("accommodations").insert({
+        "user_id": user_id,
+        "name": name,
+        "lat": lat,
+        "lon": lon,
+        "price": price
+    }).execute()
 
-def insert_attraction(name:str, lat:float, lon:float, city_id:int):
-    conn = get_connection()
-    c = conn.cursor()
-    c.execute("""INSERT INTO attractions (name, lat, lon, city_id) VALUES (?, ?, ?, ?)""", (name, lat, lon, city_id))
-    conn.commit()
-    conn.close()
+
+def get_user_accommodations(user_id):
+    """Retrieve all accommodations for the current user."""
+    result = supabase.table("accommodations").select("*").eq("user_id", user_id).execute()
+    return result.data
+
+
+def delete_accommodation(accommodation_id, user_id):
+    """Delete a specific accommodation owned by the user."""
+    return supabase.table("accommodations").delete().eq("id", accommodation_id).eq("user_id", user_id).execute()
+
+
+def get_user_entries(table_name, user_id):
+    """Generic fetch helper if you want to reuse one function."""
+    result = supabase.table(table_name).select("*").eq("user_id", user_id).execute()
+    return result.data

@@ -10,7 +10,7 @@ def create_map(accom_df, attr_df, start_lat = 35.68, start_lon=139.76, zoom = 12
     for _, row in accom_df.iterrows():
          folium.Marker(
             [row.lat, row.lon],
-            popup=folium.Popup(f"🏨 <b>{row["name"]}</b><br>¥{row.price}", max_width=250),
+            popup=folium.Popup(f"🏨 <b>{row["name"]}</b><br>€{row.price}", max_width=250),
             icon=folium.Icon(color="blue", icon="home"),
         ).add_to(accom_cluster)
          

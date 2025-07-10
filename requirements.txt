@@ -3,3 +3,5 @@ pandas
 requests
 folium
 streamlit-folium
+streamlit-authenticator
+supbase
